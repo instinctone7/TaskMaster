@@ -1,6 +1,7 @@
 package com.projects.task_master.handlers;
 
 import com.projects.task_master.exceptions.NonAuthorized;
+import com.projects.task_master.exceptions.NotificationNotFound;
 import com.projects.task_master.exceptions.PasswordIncorrect;
 import com.projects.task_master.exceptions.TaskNotFound;
 import com.projects.task_master.exceptions.UserNotFound;
@@ -29,6 +30,11 @@ public class GlobalErrorHandler {
         return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request, null);
     }
 
+    @ExceptionHandler(NotificationNotFound.class)
+    public ResponseEntity<ApiErrorResponse<Void>> handleNotificationNotFound(NotificationNotFound ex, HttpServletRequest request) {
+        return buildError(HttpStatus.NOT_FOUND, ex.getMessage(), request, null);
+    }
+
     @ExceptionHandler(PasswordIncorrect.class)
     public ResponseEntity<ApiErrorResponse<Void>> handlePasswordIncorrect(PasswordIncorrect ex, HttpServletRequest request) {
         return buildError(HttpStatus.UNAUTHORIZED, ex.getMessage(), request, null);
@@ -37,6 +43,11 @@ public class GlobalErrorHandler {
     @ExceptionHandler({NonAuthorized.class, AccessDeniedException.class})
     public ResponseEntity<ApiErrorResponse<Void>> handleAuthorizationErrors(Exception ex, HttpServletRequest request) {
         return buildError(HttpStatus.FORBIDDEN, ex.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiErrorResponse<Void>> handleBadRequest(IllegalArgumentException ex, HttpServletRequest request) {
+        return buildError(HttpStatus.BAD_REQUEST, ex.getMessage(), request, null);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

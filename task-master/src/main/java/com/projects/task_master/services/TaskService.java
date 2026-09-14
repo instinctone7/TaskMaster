@@ -19,8 +19,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 public class TaskService {
@@ -34,8 +36,9 @@ public class TaskService {
     private final AssignmentMapper assignmentMapper;
     private final TeamRepository teamRepository;
     private final CommentRepository commentRepository;
+    private final AttachmentRepository attachmentRepository;
 
-    public TaskService(UserRepository userRepository, TaskRepository taskRepository, TaskMapper taskMapper, TaskAssignmentRepository taskAssignmentRepository, AssignmentMapper assignmentMapper, TeamRepository teamRepository, CommentRepository commentRepository) {
+    public TaskService(UserRepository userRepository, TaskRepository taskRepository, TaskMapper taskMapper, TaskAssignmentRepository taskAssignmentRepository, AssignmentMapper assignmentMapper, TeamRepository teamRepository, CommentRepository commentRepository, AttachmentRepository attachmentRepository) {
         this.userRepository = userRepository;
         this.taskRepository = taskRepository;
         this.taskMapper = taskMapper;
@@ -43,6 +46,7 @@ public class TaskService {
         this.assignmentMapper = assignmentMapper;
         this.teamRepository = teamRepository;
         this.commentRepository = commentRepository;
+        this.attachmentRepository = attachmentRepository;
     }
 
 
@@ -164,7 +168,7 @@ public class TaskService {
         return tasks.map(taskMapper::TaskToTaskResponse);
     }
 
-    public String addComment(User user, Long userId, Long taskId, String comment) {
+    public String addComment(User user, Long userId, Long taskId,Long teamId, String comment) {
         User forUser = userRepository.findById(userId).orElseThrow(() ->
                 new UserNotFound("User with id " + userId + " doesnt exist"));
         Task task = taskRepository.findById(taskId).orElseThrow(() ->
@@ -172,6 +176,12 @@ public class TaskService {
         if (!task.getOwner().getId().equals(user.getId()) && !forUser.getId().equals(user.getId())) {
             throw new NonAuthorized("You have to be the owner or the user to add a comment");
         }
+        Team team = teamRepository.findById(teamId).orElseThrow(() ->
+                new TeamDoesNotExist("Team with id " + teamId + " doesnt exist"));
+        if (!team.getMembers().contains(forUser) || team.getOwnersId().equals(user.getId()) || !team.getMembers().contains(user)) {
+            throw new NonAuthorized("User with id " + userId + " is not a member of the team");
+        }
+
         Comments comments = Comments.builder()
                 .comment(comment)
                 .task(task)
@@ -179,5 +189,26 @@ public class TaskService {
                 .build();
         commentRepository.save(comments);
         return "Comment added successfully";
+    }
+
+    public String upload(Long taskId, MultipartFile file) {
+
+        // 1. Find task
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow();
+
+        // 2. Generate unique filename
+        String storageKey = UUID.randomUUID() + "_" + file.getOriginalFilename();
+
+        Attachment attachment = new Attachment();
+        attachment.setFileName(file.getOriginalFilename());
+        attachment.setFileType(file.getContentType());
+        attachment.setFileSize(file.getSize());
+        attachment.setFileUrl(storageKey);
+        attachment.setTask(task);
+
+       attachmentRepository.save(attachment);
+
+       return "Attachment uploaded successfully with storage key: " + storageKey;
     }
 }

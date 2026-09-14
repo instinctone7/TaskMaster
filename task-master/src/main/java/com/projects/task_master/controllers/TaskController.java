@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -116,12 +117,21 @@ public class TaskController {
                 ApiResponse.success("All assigned tasks retrieved", response)
         );
     }
-    @PostMapping("/comment/{userId}/{taskId}")
+    @PostMapping("/comment/{userId}/{taskId}/{teamId}")
     public ResponseEntity<ApiResponse<String>> addComment(@AuthenticationPrincipal User user,
                                                           @PathVariable Long userId,
                                                           @PathVariable Long taskId,
+                                                          @PathVariable Long teamId,
                                                           @RequestBody String comment) {
-        String response = taskService.addComment(user, userId, taskId, comment);
+        String response = taskService.addComment(user, userId, taskId, teamId, comment);
         return ResponseEntity.ok(ApiResponse.success("Comment added", response));
+    }
+    @PostMapping("/tasks/{taskId}/attachments")
+    public ResponseEntity<ApiResponse<String>> upload(
+            @PathVariable Long taskId,
+            @RequestParam("file") MultipartFile file) {
+        String response = taskService.upload(taskId, file);
+        return ResponseEntity.ok(ApiResponse.success("Attachment uploaded", response));
+
     }
 }

@@ -1,6 +1,7 @@
 package com.projects.task_master.controllers;
 
 import com.projects.task_master.dtos.requests.TeamRequest;
+import com.projects.task_master.dtos.responses.InviteList;
 import com.projects.task_master.dtos.responses.TeamResponse;
 import com.projects.task_master.entities.User;
 import com.projects.task_master.handlers.ApiResponse;
@@ -47,10 +48,10 @@ public class TeamController {
         return ResponseEntity.ok(ApiResponse.success("Team retrieved", response));
     }
     @GetMapping("/getInvites")
-    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<com.projects.task_master.dtos.responses.InviteList>>> getInvites(@AuthenticationPrincipal User user,
-                                                           @RequestParam(required = false) String teamName,
-                                                          @RequestParam(required = false,defaultValue = "id") String sortBy,
-                                                          @RequestParam(required = false,defaultValue = "asc") String sortOrder){
+    public ResponseEntity<ApiResponse<org.springframework.data.domain.Page<InviteList>>> getInvites(@AuthenticationPrincipal User user,
+                                                                                                    @RequestParam(required = false) String teamName,
+                                                                                                    @RequestParam(required = false,defaultValue = "id") String sortBy,
+                                                                                                    @RequestParam(required = false,defaultValue = "asc") String sortOrder){
         org.springframework.data.domain.Page<com.projects.task_master.dtos.responses.InviteList> response = teamService.getInvites(user,sortBy,sortOrder);
         return ResponseEntity.ok(ApiResponse.success("Invites retrieved", response));
     }
